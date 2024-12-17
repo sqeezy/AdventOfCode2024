@@ -5,8 +5,9 @@ let distance (a, b) =
     a - b |> Int32.Abs
 
 let ints = 
-    Text.Split('\n')
-    |> Array.map (fun s -> s.Split(' '))
+    Text
+    |> splitAt '\n'
+    |> Array.map (splitAt ' ')
     |> Array.map (Array.filter (fun s -> s <> ""))
     |> Array.map (fun a -> (int a.[0], int a.[1]))
 

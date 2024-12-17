@@ -1,5 +1,3 @@
-﻿namespace Shared
-
-module Say =
-    let hello name =
-        printfn "Hello %s" name
+﻿[<AutoOpen>]
+module Utils
+    let splitAt (c:char) (string : string) = string.Split(c)
