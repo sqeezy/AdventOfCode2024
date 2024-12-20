@@ -39,6 +39,26 @@ let validateUpdate (rules: MustBeBefore array) (update: Update) =
     rules
     |> Array.forall (fun rule -> satisfiesMustBeBefore rule update)
 
+let applyRuleToUpdate (rule: MustBeBefore) (update: Update) =
+    let firstIndex = update |> List.tryFindIndex (fun x -> x = rule.First)
+    let secondIndex = update |> List.tryFindIndex (fun x -> x = rule.Second)
+
+    match firstIndex, secondIndex with
+    | Some firstIndex, Some secondIndex  when firstIndex < secondIndex ->
+        let firstValue = update.[firstIndex]
+        let secondValue = update.[secondIndex]
+
+        update 
+        |> List.map (fun x ->
+            match x with
+            | x when x = firstValue -> secondValue
+            | x when x = secondValue -> firstValue
+            | _ -> x)
+    | _ -> update
+
+let fixUpdate (rules: MustBeBefore array) (update: Update) =
+    Array.fold (fun acc rule -> applyRuleToUpdate rule acc) update rules
+
 let getMiddleNumberOfUpdate (update: Update) =
     update.[update.Length/2]
 
@@ -48,5 +68,19 @@ let updates = updatesText |> Array.map parseUpdate
 let partOne = 
     updates 
     |> Array.filter (validateUpdate rules)
+    |> Array.map getMiddleNumberOfUpdate
+    |> Array.sum
+
+let brokenUpdates = 
+    updates 
+    |> Array.filter ((validateUpdate rules) >> not)
+
+brokenUpdates |> Array.length
+brokenUpdates |> Array.map (fixUpdate rules) |> Array.filter (validateUpdate rules) |> Array.length
+
+let partTwo = 
+    updates 
+    |> Array.filter ((validateUpdate rules) >> not)
+    |> Array.map (fixUpdate rules)
     |> Array.map getMiddleNumberOfUpdate
     |> Array.sum
