@@ -4,12 +4,6 @@ let inspect (x: 'a) =
     printfn "%A" x
     x
 
-let rec comb n l = 
-    match n, l with
-    | 0, _ -> [[]]
-    | _, [] -> []
-    | k, (x::xs) -> List.map ((@) [x]) (comb (k-1) xs) @ comb k xs
-
 let input = System.IO.File.ReadAllText $"""{__SOURCE_DIRECTORY__}/input.txt"""
 
 type Equation =
@@ -19,6 +13,7 @@ type Equation =
 type Operators = 
     | Add
     | Multiply
+    | Concat
 
 let parseEquation (input: string) =
     let parts = 
@@ -52,23 +47,32 @@ let calculate (equation: Equation) (operators: Operators list) =
         match operators.[i - 1] with
         | Add -> acc <- acc + equation.Nums.[i]
         | Multiply -> acc <- acc * equation.Nums.[i]
+        | Concat -> acc <- System.Int64.Parse(string acc + string equation.Nums.[i])
     acc
 
-let testEquation equation =
-    equation |> inspect |> ignore
-    let possibleOperators = [Add; Multiply]
+let testEquation operators equation =
     let operatorCount = equation.Nums.Length - 1
-    let variations = variation operatorCount possibleOperators
+    let variations = variation operatorCount operators
     variations
     |> List.map (calculate equation)
     |> List.exists (fun x -> x = equation.TestResult)
 
+let calibrate operators text =
+    input 
+    |> parseInput 
+    |> Array.filter (testEquation operators) 
+    |> Array.map (fun x -> x.TestResult) 
+    |> Array.sum
+
+let partOneOperators = [Add; Multiply]
+let partTwoOperators = [Add; Multiply; Concat]
 
 calculate { TestResult = 190; Nums = [10; 19] } [Add]
 calculate { TestResult = 190; Nums = [10; 10; 10] } [Multiply; Add]
+calculate { TestResult = 190; Nums = [10; 10; 10] } [Concat; Add]
 
-testEquation { TestResult = 190; Nums = [10; 19] }
-testEquation { TestResult = 190; Nums = [10; 10; 10] }
+testEquation partOneOperators { TestResult = 190; Nums = [10; 19] }
+testEquation partOneOperators { TestResult = 190; Nums = [10; 10; 10] }
 
 let example = 
     @"190: 10 19
@@ -81,6 +85,5 @@ let example =
 21037: 9 7 18 13
 292: 11 6 16 20"
 
-let exampleParsed = parseInput example
-
-input |> parseInput |> Array.filter testEquation |> Array.map (fun x -> x.TestResult) |> Array.sum
+let partOne = calibrate partOneOperators input
+let partTwo = calibrate partTwoOperators input
