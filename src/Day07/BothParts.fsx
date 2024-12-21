@@ -60,7 +60,7 @@ let testEquation operators equation =
 let calibrate operators text =
     input 
     |> parseInput 
-    |> Array.filter (testEquation operators) 
+    |> Array.Parallel.filter (testEquation operators) 
     |> Array.map (fun x -> x.TestResult) 
     |> Array.sum
 
